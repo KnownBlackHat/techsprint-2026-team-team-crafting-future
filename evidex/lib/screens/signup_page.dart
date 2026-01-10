@@ -1,4 +1,5 @@
 import 'package:evidex/screens/ngo_complete_profile_page.dart';
+import 'package:evidex/screens/political_complete_profile_page.dart';
 import 'package:flutter/material.dart';
 
 class SignupPage extends StatefulWidget {
@@ -143,6 +144,13 @@ class _SignupPageState extends State<SignupPage> {
                               context,
                               MaterialPageRoute(
                                 builder: (_) => const NgoCompleteProfilePage(),
+                              ),
+                            );
+                          } else if (selectedRole == "political") {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const PoliticalCompleteProfilePage(),
                               ),
                             );
                           } else {
