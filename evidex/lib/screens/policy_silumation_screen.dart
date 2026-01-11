@@ -12,8 +12,7 @@ class PolicySimulationScreen extends StatefulWidget {
   });
 
   @override
-  State<PolicySimulationScreen> createState() =>
-      _PolicySimulationScreenState();
+  State<PolicySimulationScreen> createState() => _PolicySimulationScreenState();
 }
 
 class _PolicySimulationScreenState extends State<PolicySimulationScreen> {
@@ -23,11 +22,20 @@ class _PolicySimulationScreenState extends State<PolicySimulationScreen> {
   String? suggestion;
 
   final Map<String, double> sliders = {
+    // Social
     "civilian_well_being": 50,
     "economic_stability": 50,
     "healthcare_access": 50,
     "food_security": 50,
     "refugee_risk": 50,
+
+    // Economic pressure (REQUIRED by backend)
+    "economic_sanctions": 50,
+    "trade_restrictions": 50,
+    "energy_export_controls": 50,
+    "aid_withdrawal_or_injection": 50,
+
+    // Optional internal stress (keep if backend allows extra)
     "inflation_pressure": 50,
     "household_cost_stress": 50,
     "supply_chain_stress": 50,
@@ -41,7 +49,7 @@ class _PolicySimulationScreenState extends State<PolicySimulationScreen> {
       final result = await PolicyApiService.analyzePolicy(
         state: widget.state,
         policyTitle: widget.policyTitle,
-        index: sliders, // 🔥 REAL SIMULATION INPUT
+        index: sliders,
       );
 
       setState(() {
@@ -63,9 +71,11 @@ class _PolicySimulationScreenState extends State<PolicySimulationScreen> {
         title: const Text("Lets Simulate and Learn"),
         backgroundColor: const Color(0xFF1765BE),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
+        // ✅ FIX
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               "Adjust the sliders as per your preference",
@@ -75,13 +85,9 @@ class _PolicySimulationScreenState extends State<PolicySimulationScreen> {
             const SizedBox(height: 12),
 
             /// SLIDERS
-            Expanded(
-              child: ListView(
-                children: sliders.keys.map((key) {
-                  return _sliderItem(key);
-                }).toList(),
-              ),
-            ),
+            ...sliders.keys.map(_sliderItem).toList(),
+
+            const SizedBox(height: 20),
 
             /// SIMULATE BUTTON
             SizedBox(
@@ -96,23 +102,20 @@ class _PolicySimulationScreenState extends State<PolicySimulationScreen> {
                 ),
                 onPressed: loading ? null : _simulate,
                 child: loading
-                    ? const CircularProgressIndicator(
-                        color: Colors.white,
-                      )
+                    ? const CircularProgressIndicator(color: Colors.white)
                     : const Text(
                         "Simulate",
-                        style:
-                            TextStyle(fontSize: 16, color: Colors.white),
+                        style: TextStyle(fontSize: 16, color: Colors.white),
                       ),
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
-            /// RESULT
-            if (deltaIndex != null && deltaIndex!.isNotEmpty)
-              Expanded(child: _resultTable()),
+            /// RESULT TABLE
+            if (deltaIndex != null && deltaIndex!.isNotEmpty) _resultTable(),
 
+            /// SUGGESTION
             if (suggestion != null) _suggestionBox(),
           ],
         ),
@@ -138,9 +141,7 @@ class _PolicySimulationScreenState extends State<PolicySimulationScreen> {
           label: sliders[key]!.round().toString(),
           activeColor: const Color(0xFF1765BE),
           onChanged: (v) {
-            setState(() {
-              sliders[key] = v;
-            });
+            setState(() => sliders[key] = v);
           },
         ),
       ],
@@ -152,23 +153,21 @@ class _PolicySimulationScreenState extends State<PolicySimulationScreen> {
   Widget _resultTable() {
     final keys = deltaIndex!.keys.toList();
 
-    return SingleChildScrollView(
-      child: Table(
-        border: TableBorder.all(color: Colors.black),
-        columnWidths: const {
-          0: FixedColumnWidth(40),
-          1: FlexColumnWidth(2),
-          2: FixedColumnWidth(80),
-          3: FixedColumnWidth(90),
-        },
-        children: [
-          _tableHeader(),
-          ...List.generate(
-            keys.length,
-            (i) => _tableRow(i + 1, keys[i], deltaIndex![keys[i]]!),
-          ),
-        ],
-      ),
+    return Table(
+      border: TableBorder.all(color: Colors.black),
+      columnWidths: const {
+        0: FixedColumnWidth(40),
+        1: FlexColumnWidth(2),
+        2: FixedColumnWidth(80),
+        3: FixedColumnWidth(90),
+      },
+      children: [
+        _tableHeader(),
+        ...List.generate(
+          keys.length,
+          (i) => _tableRow(i + 1, keys[i], deltaIndex![keys[i]]!),
+        ),
+      ],
     );
   }
 
@@ -182,18 +181,15 @@ class _PolicySimulationScreenState extends State<PolicySimulationScreen> {
         ),
         Padding(
           padding: EdgeInsets.all(8),
-          child:
-              Text("Index", style: TextStyle(color: Colors.white)),
+          child: Text("Index", style: TextStyle(color: Colors.white)),
         ),
         Padding(
           padding: EdgeInsets.all(8),
-          child:
-              Text("% Change", style: TextStyle(color: Colors.white)),
+          child: Text("% Change", style: TextStyle(color: Colors.white)),
         ),
         Padding(
           padding: EdgeInsets.all(8),
-          child:
-              Text("Analysis", style: TextStyle(color: Colors.white)),
+          child: Text("Analysis", style: TextStyle(color: Colors.white)),
         ),
       ],
     );
@@ -241,11 +237,8 @@ class _PolicySimulationScreenState extends State<PolicySimulationScreen> {
 
   Widget _suggestionBox() {
     return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Text(
-        suggestion!,
-        style: const TextStyle(fontSize: 14),
-      ),
+      padding: const EdgeInsets.only(top: 16),
+      child: Text(suggestion!, style: const TextStyle(fontSize: 14)),
     );
   }
 }
