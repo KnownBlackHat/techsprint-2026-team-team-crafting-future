@@ -1,5 +1,6 @@
 import 'package:evidex/screens/analyze_screen.dart';
 import 'package:evidex/screens/simulator_screen.dart';
+import 'package:evidex/screens/stats_map_screen.dart';
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 
@@ -15,8 +16,8 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
 
   final List<Widget> pages = const [
     HomePage(),
-    Center(child: Text("Simulator")),
     SimulatorScreen(),
+    StatsMapScreen(),
     AnalyzeScreen(),
     Center(child: Text("Profile")),
   ];
