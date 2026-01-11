@@ -1,3 +1,5 @@
+import 'package:evidex/screens/floating_bottom_nav.dart';
+import 'package:evidex/screens/home_screen.dart';
 import 'package:evidex/screens/signup_page.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -185,21 +187,16 @@ class _LoginPageState extends State<LoginPage> {
                     Center(
                       child: RichText(
                         text: TextSpan(
-                          text: "Don't have an account? ",
-                          style: const TextStyle(color: Colors.grey),
                           children: [
                             TextSpan(
-                              text: "Sign up",
-                              style: TextStyle(
-                                color: primaryBlue,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              text: "Sign in with Demo Account",
+                              style: const TextStyle(color: Colors.grey),
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const SignupPage(),
+                                      builder: (context) => const FloatingBottomNav(),
                                     ),
                                   );
                                 },

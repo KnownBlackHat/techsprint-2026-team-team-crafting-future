@@ -17,7 +17,6 @@ class PolicyApiService {
     return data.map((e) => PolicyModel.fromJson(e)).toList();
   }
 
-  /// POST analysis for selected policy
   static Future<PolicyAnalysisModel> analyzePolicy({
     required String state,
     required String policyTitle,
