@@ -1,17 +1,93 @@
 import 'package:flutter/material.dart';
+import '../services/analyze_api_service.dart';
 
 class AnalyzeResponseScreen extends StatefulWidget {
-  const AnalyzeResponseScreen({super.key});
+  final String state;
+  final String policy;
+
+  const AnalyzeResponseScreen({
+    super.key,
+    required this.state,
+    required this.policy,
+  });
 
   @override
-  State<AnalyzeResponseScreen> createState() => _AnalyzeResponseScreenState();
+  State<AnalyzeResponseScreen> createState() =>
+      _AnalyzeResponseScreenState();
 }
 
 class _AnalyzeResponseScreenState extends State<AnalyzeResponseScreen> {
-  String party1Response = "Response from Party 1 will appear here...";
-  String party2Response = "Response from Party 2 will appear here...";
-
   final TextEditingController inputController = TextEditingController();
+
+  String selectedLens = "Humantarian";
+  String responseText = "Ask a question to begin analysis...";
+
+  bool loading = false;
+
+  final List<String> chatHistory = [];
+
+  final List<String> lenses = [
+    "Humantarian",
+    "Finance",
+    "Healthcare",
+    "Infrastructural",
+  ];
+
+  Future<void> _sendQuery() async {
+    final query = inputController.text.trim();
+    if (query.isEmpty) return;
+
+    setState(() => loading = true);
+
+    try {
+      final result = await AnalyzeApiService.analyzePolicy(
+        lens: selectedLens,
+        state: widget.state,
+        policy: widget.policy,
+        chatHistory: chatHistory,
+        query: query,
+      );
+
+      setState(() {
+        responseText = result;
+
+        /// maintain only last 3 responses
+        chatHistory.add(result);
+        if (chatHistory.length > 3) {
+          chatHistory.removeAt(0);
+        }
+      });
+
+      inputController.clear();
+    } catch (e) {
+      debugPrint("Analyze error: $e");
+    }
+
+    setState(() => loading = false);
+  }
+
+  void _showLensPicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return ListView(
+          shrinkWrap: true,
+          children: lenses.map((lens) {
+            return ListTile(
+              title: Text(lens),
+              onTap: () {
+                setState(() => selectedLens = lens);
+                Navigator.pop(context);
+              },
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +104,8 @@ class _AnalyzeResponseScreenState extends State<AnalyzeResponseScreen> {
               /// TOP BRAND
               Row(
                 children: const [
-                  Icon(Icons.verified, color: primaryBlue, size: 18),
+                  Icon(Icons.verified,
+                      color: primaryBlue, size: 18),
                   SizedBox(width: 6),
                   Text(
                     "Evidex",
@@ -50,43 +127,74 @@ class _AnalyzeResponseScreenState extends State<AnalyzeResponseScreen> {
                   SizedBox(width: 10),
                   Text(
                     "Greetings!",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
 
-              /// PARTY 2 RESPONSE (BLUE)
-              _responseCard(
-                title: "AI Agent - Party 2",
-                titleColor: Colors.blue,
-                bgColor: const Color(0xFFCFE3F3),
-                text: party2Response,
+              /// SELECTED LENS
+              Text(
+                "Lens: $selectedLens",
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600),
               ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 12),
 
-              /// PARTY 1 RESPONSE (ORANGE)
-              _responseCard(
-                title: "AI Agent - Party 1",
-                titleColor: Colors.deepOrange,
-                bgColor: const Color(0xFFF8DCCB),
-                text: party1Response,
+              /// RESPONSE CARD
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCFE3F3),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: loading
+                    ? const Center(
+                        child: CircularProgressIndicator(),
+                      )
+                    : Text(
+                        responseText,
+                        style: const TextStyle(fontSize: 14),
+                      ),
               ),
 
               const Spacer(),
 
-              /// INPUT BAR
+              /// INPUT + ACTIONS
               Row(
                 children: [
+                  /// PLUS BUTTON
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFF1765BE),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.add,
+                          color: Colors.white),
+                      onPressed: _showLensPicker,
+                    ),
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  /// INPUT
                   Expanded(
                     child: Container(
                       height: 46,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade400),
-                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                            color: Colors.grey.shade400),
+                        borderRadius:
+                            BorderRadius.circular(30),
                       ),
                       child: TextField(
                         controller: inputController,
@@ -100,7 +208,7 @@ class _AnalyzeResponseScreenState extends State<AnalyzeResponseScreen> {
 
                   const SizedBox(width: 10),
 
-                  /// SEND BUTTON
+                  /// SEND
                   Container(
                     width: 46,
                     height: 46,
@@ -109,13 +217,9 @@ class _AnalyzeResponseScreenState extends State<AnalyzeResponseScreen> {
                       color: Color(0xFF0B2F58),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.send, color: Colors.white),
-                      onPressed: () {
-                        // TODO:
-                        // 1. Call Party 1 API
-                        // 2. Call Party 2 API
-                        // 3. Update party1Response & party2Response
-                      },
+                      icon: const Icon(Icons.send,
+                          color: Colors.white),
+                      onPressed: loading ? null : _sendQuery,
                     ),
                   ),
                 ],
@@ -126,38 +230,6 @@ class _AnalyzeResponseScreenState extends State<AnalyzeResponseScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  /// REUSABLE RESPONSE CARD
-  Widget _responseCard({
-    required String title,
-    required Color titleColor,
-    required Color bgColor,
-    required String text,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 12,
-            color: titleColor,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Text(text, style: const TextStyle(fontSize: 14)),
-        ),
-      ],
     );
   }
 }

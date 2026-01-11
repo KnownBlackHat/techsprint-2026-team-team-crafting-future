@@ -18,7 +18,6 @@ class AnalyzePolicyInputScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// TOP BRAND
               Row(
                 children: [
                   Icon(Icons.verified, color: primaryBlue, size: 18),
@@ -120,8 +119,14 @@ class AnalyzePolicyInputScreen extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    AnalyzeResponseScreen(), // Replace with your target screen
+                                builder: (context) {
+                                  final TextEditingController policyController =
+                                      TextEditingController();
+                                  return AnalyzeResponseScreen(
+                                    state: selectedState,
+                                    policy: policyController.text,
+                                  );
+                                },
                               ),
                             );
                           },

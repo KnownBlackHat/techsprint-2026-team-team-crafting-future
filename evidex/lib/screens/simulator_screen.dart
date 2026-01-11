@@ -1,3 +1,4 @@
+import 'package:evidex/screens/policy_silumation_screen.dart';
 import 'package:flutter/material.dart';
 import '../models/policy_model.dart';
 import '../services/policy_api_service.dart';
@@ -98,6 +99,32 @@ class _SimulatorScreenState extends State<SimulatorScreen> {
                 const CircularProgressIndicator()
               else if (deltaIndex != null && deltaIndex!.isNotEmpty)
                 Expanded(child: _indexTable()),
+
+              const SizedBox(height: 12),
+
+              InkWell(
+                onTap: () {
+                  if (deltaIndex == null) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PolicySimulationScreen(
+                        state: selectedState!,
+                        policyTitle: selectedPolicy!.title,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text(
+                  "Lets simulate and learn!",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
