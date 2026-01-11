@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../models/news_model.dart';
+import '../services/news_api_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,30 +13,38 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   double dragX = 0;
+  bool isCardView = true;
+  bool loading = true;
 
-  final List<Map<String, String>> newsList = [
-    {
-      "tag": "Trending #1",
-      "title": "New Economic Sanctions Announced Amid Rising Regional Tensions",
-      "desc":
-          "Governments have introduced fresh economic sanctions, raising questions about their long-term impact on civilian livelihoods and regional stability.",
-    },
-    {
-      "tag": "Trending #2",
-      "title": "Healthcare Reform Bill Sparks Nationwide Debate",
-      "desc":
-          "The proposed healthcare reforms have ignited debate among policymakers, professionals, and the general public.",
-    },
-    {
-      "tag": "Trending #3",
-      "title": "Global Markets React to Interest Rate Changes",
-      "desc":
-          "Stock markets worldwide showed volatility following the announcement of new interest rate policies.",
-    },
-  ];
+  String selectedCategory = "Trending";
+  List<NewsModel> newsList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNews(selectedCategory);
+  }
+
+  Future<void> _loadNews(String category) async {
+    setState(() {
+      loading = true;
+      selectedCategory = category;
+    });
+
+    try {
+      final data = await NewsApiService.fetchNews(category);
+      setState(() {
+        newsList = data;
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    setState(() => loading = false);
+  }
 
   void _onSwipeEnd() {
-    if (dragX < -120) {
+    if (dragX < -120 && newsList.length > 1) {
       setState(() {
         final removed = newsList.removeAt(0);
         newsList.add(removed);
@@ -55,42 +65,17 @@ class _HomePageState extends State<HomePage> {
             _topBar(),
             _searchBar(),
             _categoryTabs(),
+            _viewToggle(),
             const SizedBox(height: 10),
 
-            /// STACKED CARD DECK
             Expanded(
-              child: Stack(
-                alignment: Alignment.center,
-                children: List.generate(min(3, newsList.length), (index) {
-                  final isTop = index == 0;
-
-                  final double offsetX = index == 1
-                      ? lerpDouble(18.0, 0.0, swipeProgress)!
-                      : index == 2
-                      ? lerpDouble(36.0, 18.0, swipeProgress)!
-                      : 0.0;
-
-                  final double offsetY = index * 6.0;
-
-                  final scale = index == 1
-                      ? lerpDouble(0.95, 1.0, swipeProgress)!
-                      : index == 2
-                      ? lerpDouble(0.9, 0.95, swipeProgress)!
-                      : 1.0;
-
-                  return Positioned(
-                    child: isTop
-                        ? _draggableCard(newsList[index])
-                        : Transform.translate(
-                            offset: Offset(offsetX, offsetY),
-                            child: Transform.scale(
-                              scale: scale,
-                              child: _newsCard(newsList[index]),
-                            ),
-                          ),
-                  );
-                }).reversed.toList(),
-              ),
+              child: loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : newsList.isEmpty
+                      ? const Center(child: Text("No news available"))
+                      : isCardView
+                          ? _cardStackView(swipeProgress)
+                          : _listView(),
             ),
           ],
         ),
@@ -98,27 +83,244 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ---------------- CARD BEHAVIOR ----------------
+  // ================= CATEGORY TABS =================
 
-  Widget _draggableCard(Map<String, String> news) {
+  Widget _categoryTabs() {
+    final categories = [
+      "trending",
+      "policies",
+      "healthcare",
+      "finance",
+      "education",
+      "all",
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: categories.map((cat) {
+            final bool active = selectedCategory == cat;
+            return GestureDetector(
+              onTap: () => _loadNews(cat),
+              child: Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Text(
+                  cat,
+                  style: TextStyle(
+                    fontWeight:
+                        active ? FontWeight.bold : FontWeight.normal,
+                    color:
+                        active ? const Color(0xFF1765BE) : Colors.black,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  // ================= VIEW TOGGLE =================
+
+  Widget _viewToggle() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Container(
+            height: 36,
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _iconToggle(
+                  selected: isCardView,
+                  icon: Icons.view_agenda,
+                  label: "Card",
+                  onTap: () => setState(() => isCardView = true),
+                ),
+                _iconToggle(
+                  selected: !isCardView,
+                  icon: Icons.list,
+                  label: "List",
+                  onTap: () => setState(() => isCardView = false),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconToggle({
+    required bool selected,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
-      onPanUpdate: (details) {
-        setState(() {
-          dragX += details.delta.dx;
-        });
-      },
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding:
+            EdgeInsets.symmetric(horizontal: selected ? 12 : 8),
+        height: 28,
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF1765BE) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Icon(icon,
+                size: 16,
+                color: selected ? Colors.white : Colors.black54),
+            if (selected) ...[
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ================= CARD STACK VIEW =================
+
+  Widget _cardStackView(double swipeProgress) {
+    return Stack(
+      alignment: Alignment.center,
+      children: List.generate(min(3, newsList.length), (index) {
+        final isTop = index == 0;
+
+        final offsetX = index == 1
+            ? lerpDouble(18.0, 0.0, swipeProgress)!
+            : index == 2
+                ? lerpDouble(36.0, 18.0, swipeProgress)!
+                : 0.0;
+
+        final scale = index == 1
+            ? lerpDouble(0.95, 1.0, swipeProgress)!
+            : index == 2
+                ? lerpDouble(0.9, 0.95, swipeProgress)!
+                : 1.0;
+
+        return Positioned(
+          child: isTop
+              ? _draggableCard(newsList[index])
+              : Transform.translate(
+                  offset: Offset(offsetX, index * 6.0),
+                  child: Transform.scale(
+                    scale: scale,
+                    child: _newsCard(newsList[index]),
+                  ),
+                ),
+        );
+      }).reversed.toList(),
+    );
+  }
+
+  Widget _draggableCard(NewsModel news) {
+    return GestureDetector(
+      onPanUpdate: (d) => setState(() => dragX += d.delta.dx),
       onPanEnd: (_) => _onSwipeEnd(),
       child: Transform.translate(
-        offset: Offset(dragX, 0), // locked vertical
+        offset: Offset(dragX, 0),
         child: Transform.rotate(
-          angle: dragX * pi / 2600, // curved path
+          angle: dragX * pi / 2600,
           child: _newsCard(news),
         ),
       ),
     );
   }
 
-  // ---------------- UI ----------------
+  // ================= LIST VIEW =================
+
+  Widget _listView() {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: newsList.length,
+      itemBuilder: (context, index) {
+        final news = newsList[index];
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              news.imageUrl.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                      ),
+                      child: Image.network(
+                        news.imageUrl,
+                        height: 160,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : Container(
+                      height: 160,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16),
+                        ),
+                      ),
+                    ),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(news.title,
+                        style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 6),
+                    Text("Published by ${news.author}",
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ================= UI =================
 
   Widget _topBar() {
     return Padding(
@@ -154,35 +356,15 @@ class _HomePageState extends State<HomePage> {
           children: [
             Icon(Icons.search, color: Colors.grey),
             SizedBox(width: 8),
-            Text("Search for any news", style: TextStyle(color: Colors.grey)),
+            Text("Search for any news",
+                style: TextStyle(color: Colors.grey)),
           ],
         ),
       ),
     );
   }
 
-  Widget _categoryTabs() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        children: const [
-          Text("Trending", style: TextStyle(fontWeight: FontWeight.bold)),
-          SizedBox(width: 16),
-          Text("Policies"),
-          SizedBox(width: 16),
-          Text("Healthcare"),
-          SizedBox(width: 16),
-          Text("Finance"),
-          SizedBox(width: 16),
-          Text("Education"),
-        ],
-      ),
-    );
-  }
-
-  // ---------------- CARD UI ----------------
-
-  Widget _newsCard(Map<String, String> news) {
+  Widget _newsCard(NewsModel news) {
     return Container(
       width: MediaQuery.of(context).size.width * 0.86,
       height: MediaQuery.of(context).size.height * 0.6,
@@ -194,34 +376,11 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.red,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              news["tag"]!,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
-            ),
-          ),
+          Text(news.title,
+              style: const TextStyle(
+                  fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
-          Text(
-            news["title"]!,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          Text(news["desc"]!, style: const TextStyle(fontSize: 14)),
-          const Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: const [
-              Icon(Icons.thumb_up_alt_outlined),
-              Icon(Icons.share_outlined),
-              Icon(Icons.bookmark_border),
-              Icon(Icons.send),
-            ],
-          ),
+          Text(news.description),
         ],
       ),
     );

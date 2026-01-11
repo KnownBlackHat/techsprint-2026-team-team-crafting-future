@@ -1,4 +1,5 @@
 import 'package:evidex/screens/analyze_screen.dart';
+import 'package:evidex/screens/simulator_screen.dart';
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 
@@ -15,16 +16,16 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
   final List<Widget> pages = const [
     HomePage(),
     Center(child: Text("Simulator")),
-    Center(child: Text("Stats")),
+    SimulatorScreen(),
     AnalyzeScreen(),
     Center(child: Text("Profile")),
   ];
 
   final List<IconData> icons = [
     Icons.home_filled,
-    Icons.vrpano,
-    Icons.inventory_2,
-    Icons.manage_search,
+    Icons.view_kanban_outlined,
+    Icons.view_in_ar,
+    Icons.analytics_outlined,
     Icons.settings,
   ];
 
@@ -39,31 +40,32 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[200],
       body: pages[selectedIndex],
-
-      /// FLOATING BOTTOM NAV
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(bottom: 16),
+      bottomNavigationBar: SafeArea(
         child: Container(
-          height: 68,
-          margin: const EdgeInsets.symmetric(horizontal: 18),
+          height: 80,
+          margin: const EdgeInsets.only(left: 12, right: 12, bottom: 20),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-              colors: [Color(0xFF1765BE), Color(0xFF0B2F58)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF134E95),
+                Color(0xFF05182C),
+              ],
             ),
             borderRadius: BorderRadius.circular(40),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.25),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
+                color: const Color(0xFF05182C).withOpacity(0.4),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: List.generate(icons.length, (index) => _navItem(index)),
           ),
         ),
@@ -75,49 +77,52 @@ class _FloatingBottomNavState extends State<FloatingBottomNav> {
     final bool isSelected = selectedIndex == index;
 
     return Expanded(
-      flex: isSelected ? 5 : 4, // give selected a bit more breathing room
+      flex: 1,
       child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
         onTap: () {
           setState(() {
             selectedIndex = index;
           });
         },
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final double circleSize = (constraints.maxHeight - 22).clamp(36, 48);
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  width: circleSize,
-                  height: circleSize,
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.white : Colors.transparent,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    icons[index],
-                    size: 22,
-                    color:
-                        isSelected ? const Color(0xFF1765BE) : Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 2), // gap after the circle
-                Text(
-                  labels[index],
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
-                    color: isSelected
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.9),
-                  ),
-                ),
-              ],
-            );
-          },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut,
+              width: isSelected ? 50 : 24,
+              height: isSelected ? 50 : 24,
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.white : Colors.transparent,
+                shape: BoxShape.circle,
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        )
+                      ]
+                    : null,
+              ),
+              child: Icon(
+                icons[index],
+                color: isSelected ? const Color(0xFF1765BE) : Colors.white.withOpacity(0.9),
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              labels[index],
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
     );

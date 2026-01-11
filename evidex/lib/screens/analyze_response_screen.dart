@@ -4,19 +4,14 @@ class AnalyzeResponseScreen extends StatefulWidget {
   const AnalyzeResponseScreen({super.key});
 
   @override
-  State<AnalyzeResponseScreen> createState() =>
-      _AnalyzeResponseScreenState();
+  State<AnalyzeResponseScreen> createState() => _AnalyzeResponseScreenState();
 }
 
 class _AnalyzeResponseScreenState extends State<AnalyzeResponseScreen> {
-  // These will be filled by API later
-  String party1Response =
-      "Response from Party 1 will appear here...";
-  String party2Response =
-      "Response from Party 2 will appear here...";
+  String party1Response = "Response from Party 1 will appear here...";
+  String party2Response = "Response from Party 2 will appear here...";
 
-  final TextEditingController inputController =
-      TextEditingController();
+  final TextEditingController inputController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +28,7 @@ class _AnalyzeResponseScreenState extends State<AnalyzeResponseScreen> {
               /// TOP BRAND
               Row(
                 children: const [
-                  Icon(Icons.verified,
-                      color: primaryBlue, size: 18),
+                  Icon(Icons.verified, color: primaryBlue, size: 18),
                   SizedBox(width: 6),
                   Text(
                     "Evidex",
@@ -56,10 +50,7 @@ class _AnalyzeResponseScreenState extends State<AnalyzeResponseScreen> {
                   SizedBox(width: 10),
                   Text(
                     "Greetings!",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -92,13 +83,10 @@ class _AnalyzeResponseScreenState extends State<AnalyzeResponseScreen> {
                   Expanded(
                     child: Container(
                       height: 46,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        border: Border.all(
-                            color: Colors.grey.shade400),
-                        borderRadius:
-                            BorderRadius.circular(30),
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                       child: TextField(
                         controller: inputController,
@@ -121,8 +109,7 @@ class _AnalyzeResponseScreenState extends State<AnalyzeResponseScreen> {
                       color: Color(0xFF0B2F58),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.send,
-                          color: Colors.white),
+                      icon: const Icon(Icons.send, color: Colors.white),
                       onPressed: () {
                         // TODO:
                         // 1. Call Party 1 API
@@ -168,10 +155,7 @@ class _AnalyzeResponseScreenState extends State<AnalyzeResponseScreen> {
             color: bgColor,
             borderRadius: BorderRadius.circular(18),
           ),
-          child: Text(
-            text,
-            style: const TextStyle(fontSize: 14),
-          ),
+          child: Text(text, style: const TextStyle(fontSize: 14)),
         ),
       ],
     );

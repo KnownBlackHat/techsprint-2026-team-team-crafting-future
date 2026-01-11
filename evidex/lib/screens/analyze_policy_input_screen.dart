@@ -2,7 +2,8 @@ import 'package:evidex/screens/analyze_response_screen.dart';
 import 'package:flutter/material.dart';
 
 class AnalyzePolicyInputScreen extends StatelessWidget {
-  const AnalyzePolicyInputScreen({super.key});
+  final String selectedState;
+  const AnalyzePolicyInputScreen({super.key, required this.selectedState});
 
   @override
   Widget build(BuildContext context) {

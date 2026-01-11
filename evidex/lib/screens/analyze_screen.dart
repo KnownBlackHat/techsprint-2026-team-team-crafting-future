@@ -102,7 +102,7 @@ class _AnalyzeScreenState extends State<AnalyzeScreen> {
                       const SizedBox(width: 12),
                       Container(
                         height: 42,
-                        width: 150, 
+                        width: 150,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey.shade600),
@@ -141,12 +141,15 @@ class _AnalyzeScreenState extends State<AnalyzeScreen> {
                       onTap: selectedState == null
                           ? null
                           : () {
-                                Navigator.push(
+                              Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const AnalyzePolicyInputScreen(),
+                                  builder: (context) =>
+                                      AnalyzePolicyInputScreen(
+                                        selectedState: selectedState!,
+                                      ),
                                 ),
-                                );
+                              );
                             },
                       child: Container(
                         decoration: BoxDecoration(
